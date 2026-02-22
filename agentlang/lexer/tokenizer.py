@@ -23,6 +23,7 @@ class TokenType(Enum):
     STRING = auto()
     INTEGER = auto()
     FLOAT = auto()
+    NUMBER = auto()  # Alias for numeric literals (INTEGER or FLOAT)
     BOOLEAN = auto()
     
     # Operators & Punctuation
@@ -112,7 +113,7 @@ class Tokenizer:
     
     def skip_whitespace(self):
         """Skip whitespace except newlines"""
-        while self.current_char() in ' \t\r':
+        while self.current_char() and self.current_char() in ' \t\r':
             self.advance()
     
     def skip_line_comment(self):
@@ -177,10 +178,8 @@ class Tokenizer:
             self.advance()
         
         num_str = ''.join(chars)
-        if is_float:
-            return Token(TokenType.FLOAT, float(num_str), start_line, start_col)
-        else:
-            return Token(TokenType.INTEGER, int(num_str), start_line, start_col)
+        value = float(num_str) if is_float else int(num_str)
+        return Token(TokenType.NUMBER, value, start_line, start_col)
     
     def read_identifier(self) -> Token:
         """Read identifier or keyword"""

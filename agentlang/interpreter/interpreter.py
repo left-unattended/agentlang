@@ -2,8 +2,11 @@
 
 import logging
 from typing import Any
+from pathlib import Path
 from ..parser.ast_nodes import *
 from ..runtime import Runtime, Agent, Tool
+from ..lexer import tokenize
+from ..parser import parse
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +16,17 @@ class Interpreter:
     
     def __init__(self, runtime: Runtime = None):
         self.runtime = runtime or Runtime()
+    
+    def run_file(self, filepath: str) -> Any:
+        """Run an AgentLang file"""
+        path = Path(filepath)
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {filepath}")
+        
+        source = path.read_text()
+        tokens = tokenize(source)
+        ast = parse(tokens)
+        return self.execute(ast)
     
     def execute(self, program: Program) -> Any:
         """Execute a program"""

@@ -226,7 +226,7 @@ class Parser:
             return self.advance().value
         
         # Number
-        if token.type in (TokenType.INTEGER, TokenType.FLOAT):
+        if token.type in (TokenType.INTEGER, TokenType.FLOAT, TokenType.NUMBER):
             return self.advance().value
         
         # Boolean

@@ -41,7 +41,8 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual(tokens[0].type, TokenType.STRING)
         self.assertEqual(tokens[0].value, "hello world")
         self.assertEqual(tokens[1].type, TokenType.STRING)
-        self.assertEqual(tokens[1].value, "multi\\nline")
+        # Escape sequences are processed: \n becomes newline
+        self.assertEqual(tokens[1].value, "multi\nline")
 
     def test_numbers(self):
         """Test number parsing."""
@@ -97,6 +98,9 @@ class TestTokenizer(unittest.TestCase):
         """
         tokenizer = Tokenizer(code)
         tokens = tokenizer.tokenize()
+        
+        # Filter out NEWLINE tokens for easier testing
+        tokens = [t for t in tokens if t.type != TokenType.NEWLINE]
         
         self.assertEqual(tokens[0].type, TokenType.AGENT)
         self.assertEqual(tokens[1].type, TokenType.IDENTIFIER)

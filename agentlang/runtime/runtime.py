@@ -107,6 +107,11 @@ class Runtime:
         }
         logger.info(f"Registered pipeline: {name}")
     
+    def update_config(self, config: Dict[str, Any]):
+        """Update runtime configuration"""
+        self.config.update(config)
+        logger.info(f"Updated config: {config}")
+    
     def run_agent(self, agent_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Execute an agent"""
         if agent_name not in self.agents:

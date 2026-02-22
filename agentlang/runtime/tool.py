@@ -32,3 +32,10 @@ class Tool:
                 kwargs[param_name] = default
         
         return self.handler(**kwargs)
+    
+    def execute(self, *args, **kwargs) -> Any:
+        """Alias for call() - execute the tool with given parameters"""
+        # If positional args provided, call handler directly
+        if args:
+            return self.handler(*args, **kwargs)
+        return self.call(**kwargs)
