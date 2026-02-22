@@ -1145,3 +1145,212 @@ The vision for "full fledged language" is exciting! Key principles I'd follow:
 **Ready to start Track B (v0.2 design) whenever you are!**
 
 For now: v0.1 is DONE and ready for public use. 🚀
+
+---
+
+**[reviewer] 2026-02-22 16:26 UTC - DSL vs LANGUAGE: STRATEGIC RECOMMENDATION**
+
+rohini clarified: "maybe we should keep it to dsl? what i want is an easier way to implement multi agent systems"
+
+**This changes everything.** My analysis:
+
+## DSL vs Full Language
+
+**Full Language Approach (v0.2 in roadmap):**
+- Add variables, loops, conditionals, functions
+- Becomes general-purpose with agent primitives
+- Competes with Python + LangChain
+- **Pros:** Can do anything
+- **Cons:** Complex, long development, unclear value proposition
+
+**DSL Approach (refocused):**
+- Stay declarative, stay simple
+- Focus on multi-agent coordination ONLY
+- Embed in Python for complex logic
+- **Pros:** Clear value, faster to build, simpler to use
+- **Cons:** Limited to orchestration use cases
+
+## What rohini wants: "easier way to implement multi agent systems"
+
+**Current state (v0.1):**
+- Single agent execution ✅
+- Pipelines (sequential) ⚠️
+- Multi-agent messaging ❌
+- Shared state ❌
+- Coordination patterns ❌
+
+**Competitor: CrewAI (Python)**
+```python
+from crewai import Agent, Task, Crew
+
+researcher = Agent(role="Researcher", goal="Find info", tools=[search])
+writer = Agent(role="Writer", goal="Write report")
+
+task1 = Task(description="Research topic", agent=researcher)
+task2 = Task(description="Write report", agent=writer)
+
+crew = Crew(agents=[researcher, writer], tasks=[task1, task2])
+crew.kickoff()
+```
+
+**What AgentLang should be:**
+```agentlang
+agent researcher {
+  role: "Researcher"
+  tools: [web_search]
+}
+
+agent writer {
+  role: "Writer"  
+}
+
+team research_crew {
+  members: [researcher, writer]
+  workflow: sequential
+}
+
+run research_crew with {
+  task: "Write a report on AI trends"
+}
+```
+
+**Even simpler, more declarative.**
+
+## What "Easier Multi-Agent Systems" Means
+
+### Priority 1: Team Patterns (MISSING)
+```agentlang
+team {
+  leader: manager
+  workers: [coder1, coder2, tester]
+  pattern: "hierarchical"  // manager delegates to workers
+}
+```
+
+### Priority 2: Agent Communication (MISSING)
+```agentlang
+agent manager {
+  on_complete: {
+    send coder message { task: result.next_step }
+  }
+}
+```
+
+### Priority 3: Shared Memory (MISSING)
+```agentlang
+memory shared_context {
+  type: "conversation"
+  retention: "session"
+}
+
+agent researcher {
+  memory: shared_context
+}
+
+agent writer {
+  memory: shared_context  // sees researcher's context
+}
+```
+
+### Priority 4: Coordination Patterns (MISSING)
+```agentlang
+workflow parallel {
+  run [researcher1, researcher2, researcher3]
+  wait_for_all: true
+  aggregate: combine_results
+}
+```
+
+### Priority 5: Dynamic Routing (MISSING)
+```agentlang
+pipeline dynamic {
+  analyzer -> router
+  
+  router.conditions: {
+    if result.category == "code":
+      -> code_reviewer
+    else:
+      -> general_reviewer
+  }
+}
+```
+
+## Comparison: DSL Focus
+
+**If we add language features (variables, loops):**
+- 6 months of work
+- Becomes "worse Python"
+- Unclear why use AgentLang vs Python + framework
+
+**If we focus on multi-agent primitives:**
+- 2 months of work
+- Clearly better than Python for multi-agent
+- Simple, declarative, purpose-built
+
+**Example: Task that needs loops**
+
+**Full language approach:**
+```agentlang
+let results = []
+for topic in ["AI", "ML", "Robotics"] {
+  let r = run researcher with { topic: topic }
+  results.push(r)
+}
+```
+
+**DSL approach (drop to Python when needed):**
+```python
+# Python wrapper
+topics = ["AI", "ML", "Robotics"]
+results = [agentlang.run("researcher", topic=t) for t in topics]
+```
+
+**Verdict:** DSL approach keeps AgentLang simple, lets Python handle complex logic.
+
+## Recommended Roadmap (DSL-Focused)
+
+### v0.2: Multi-Agent Core (4-6 weeks)
+1. **Team definitions** - groups of agents with roles
+2. **Agent messaging** - send/receive between agents  
+3. **Shared memory** - collaborative context
+4. **Parallel workflows** - run agents concurrently
+5. **Conditional routing** - if/else in pipelines
+
+**No:** Variables, loops, functions (use Python instead)
+
+### v0.3: Coordination Patterns (3-4 weeks)
+6. **Hierarchical teams** - supervisor/worker pattern
+7. **Round-robin** - load balance across agents
+8. **Consensus** - multi-agent voting/agreement
+9. **Event-driven** - agents react to triggers
+10. **Streaming collaboration** - real-time multi-agent
+
+### v0.4: Production Multi-Agent (3-4 weeks)
+11. **Persistent teams** - long-running agent groups
+12. **Agent discovery** - dynamic team composition
+13. **Fault tolerance** - agent failure recovery
+14. **Observability** - trace multi-agent flows
+15. **Cost splitting** - track per-agent usage
+
+## Verdict: KEEP IT A DSL ✅
+
+**Why:**
+- Faster to build (2-3 months vs 12 months)
+- Clearer value proposition (multi-agent orchestration)
+- Simpler to use (declarative > imperative)
+- Better competitive position (vs LangChain/CrewAI)
+- Plays nice with Python (use for complex logic)
+
+**What AgentLang should be:**
+- **"Docker Compose for AI agents"** - orchestration, not computation
+- **"Kubernetes manifests for teams"** - declarative coordination
+- **NOT:** General-purpose programming language
+
+**Recommendation:**
+1. ✅ Ship v0.1 (packaging) this week
+2. ✅ Start v0.2 with multi-agent primitives (NOT language features)
+3. ✅ Keep syntax declarative, let Python handle imperative logic
+
+**Focus:** Make multi-agent systems 10x easier than writing Python code.
+
+@architect - Align roadmap to DSL vision? Drop language features, focus on teams/messaging/coordination?
