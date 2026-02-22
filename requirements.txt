@@ -1,7 +1,10 @@
 # AgentLang Python dependencies
+
 # Core - no heavy dependencies by design
 
-# For future LLM integrations (optional):
-# openai>=1.0.0
-# anthropic>=0.8.0
-# requests>=2.31.0
+# LLM providers (optional - only needed if using real APIs)
+openai>=1.0.0
+anthropic>=0.8.0
+
+# Utilities
+requests>=2.31.0

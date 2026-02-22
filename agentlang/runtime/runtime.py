@@ -6,6 +6,7 @@ import logging
 from typing import Dict, Any, List, Optional
 from .agent import Agent
 from .tool import Tool
+from ..llm import LLMProvider, OpenAIProvider, AnthropicProvider, LLMMessage
 
 logger = logging.getLogger(__name__)
 
@@ -120,20 +121,95 @@ class Runtime:
         agent = self.agents[agent_name]
         logger.info(f"Running agent {agent_name} with params: {params}")
         
-        # Build prompt
+        # Build message
         user_message = params.get('task') or params.get('message') or str(params)
         
-        # For now, return a mock response
-        # TODO: Integrate with actual LLM APIs (OpenAI, Anthropic, etc.)
-        response = {
-            "agent": agent_name,
-            "model": agent.model,
-            "output": f"[MOCK RESPONSE from {agent_name}] Task: {user_message}",
-            "params": params
-        }
+        # Check if we should use real LLM or mock
+        use_mock = os.environ.get('AGENTLANG_MOCK_LLM', 'false').lower() == 'true'
         
-        logger.info(f"Agent {agent_name} completed")
-        return response
+        if use_mock or (not os.environ.get('OPENAI_API_KEY') and not os.environ.get('ANTHROPIC_API_KEY')):
+            # Use mock response
+            logger.info(f"Using mock LLM for {agent_name}")
+            response = {
+                "agent": agent_name,
+                "model": agent.model,
+                "output": f"[MOCK RESPONSE from {agent_name}] Task: {user_message}",
+                "params": params
+            }
+            logger.info(f"Agent {agent_name} completed")
+            return response
+        
+        # Use real LLM
+        try:
+            # Auto-detect provider from model name
+            provider_name = LLMProvider.detect_provider(agent.model)
+            
+            # Initialize provider
+            if provider_name == 'anthropic':
+                provider = AnthropicProvider()
+            else:  # Default to OpenAI
+                provider = OpenAIProvider()
+            
+            logger.info(f"Using {provider_name} provider for model {agent.model}")
+            
+            # Build messages
+            messages = []
+            if agent.prompt:
+                messages.append(LLMMessage(role="system", content=agent.prompt))
+            messages.append(LLMMessage(role="user", content=user_message))
+            
+            # Build tools if agent has them
+            tools = None
+            if agent.tools:
+                tools = []
+                for tool_name in agent.tools:
+                    if tool_name in self.tools:
+                        tool = self.tools[tool_name]
+                        tools.append({
+                            "name": tool.name,
+                            "description": tool.description,
+                            "params": tool.params
+                        })
+            
+            # Get completion
+            llm_response = provider.complete(
+                messages=messages,
+                model=agent.model,
+                temperature=agent.temperature if hasattr(agent, 'temperature') else 0.7,
+                max_tokens=agent.max_tokens if hasattr(agent, 'max_tokens') else 2000,
+                tools=tools
+            )
+            
+            # Handle tool calls if present
+            output = llm_response.content
+            if llm_response.tool_calls:
+                logger.info(f"Agent requested {len(llm_response.tool_calls)} tool calls")
+                # TODO: Execute tools and continue conversation
+                # For now, just include tool calls in response
+                output += f"\n[Tool calls requested: {llm_response.tool_calls}]"
+            
+            response = {
+                "agent": agent_name,
+                "model": llm_response.model,
+                "output": output,
+                "params": params,
+                "usage": llm_response.usage,
+                "tool_calls": llm_response.tool_calls
+            }
+            
+            logger.info(f"Agent {agent_name} completed with {llm_response.usage.get('total_tokens', 0)} tokens")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error running agent {agent_name}: {e}")
+            # Fall back to mock on error
+            return {
+                "agent": agent_name,
+                "model": agent.model,
+                "output": f"[ERROR: {str(e)}] Fallback mock response for: {user_message}",
+                "params": params,
+                "error": str(e)
+            }
     
     def run_pipeline(self, pipeline_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a pipeline"""
