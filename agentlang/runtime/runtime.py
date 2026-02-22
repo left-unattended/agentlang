@@ -171,34 +171,95 @@ class Runtime:
                             "params": tool.params
                         })
             
-            # Get completion
-            llm_response = provider.complete(
-                messages=messages,
-                model=agent.model,
-                temperature=agent.temperature if hasattr(agent, 'temperature') else 0.7,
-                max_tokens=agent.max_tokens if hasattr(agent, 'max_tokens') else 2000,
-                tools=tools
-            )
+            # Tool execution loop
+            max_iterations = 10  # Prevent infinite loops
+            total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
             
-            # Handle tool calls if present
-            output = llm_response.content
-            if llm_response.tool_calls:
+            for iteration in range(max_iterations):
+                # Get completion
+                llm_response = provider.complete(
+                    messages=messages,
+                    model=agent.model,
+                    temperature=agent.temperature if hasattr(agent, 'temperature') else 0.7,
+                    max_tokens=agent.max_tokens if hasattr(agent, 'max_tokens') else 2000,
+                    tools=tools
+                )
+                
+                # Track token usage
+                if llm_response.usage:
+                    for key in total_usage:
+                        total_usage[key] += llm_response.usage.get(key, 0)
+                
+                # If no tool calls, we're done
+                if not llm_response.tool_calls:
+                    logger.info(f"Agent {agent_name} completed after {iteration + 1} iterations")
+                    return {
+                        "agent": agent_name,
+                        "model": llm_response.model,
+                        "output": llm_response.content,
+                        "params": params,
+                        "usage": total_usage,
+                        "iterations": iteration + 1
+                    }
+                
+                # Execute tool calls
                 logger.info(f"Agent requested {len(llm_response.tool_calls)} tool calls")
-                # TODO: Execute tools and continue conversation
-                # For now, just include tool calls in response
-                output += f"\n[Tool calls requested: {llm_response.tool_calls}]"
+                
+                # Add assistant message with tool calls to history
+                messages.append(LLMMessage(
+                    role="assistant",
+                    content=llm_response.content or "",
+                    tool_calls=llm_response.tool_calls
+                ))
+                
+                # Execute each tool and add results
+                for tool_call in llm_response.tool_calls:
+                    tool_name = tool_call["function"]["name"]
+                    tool_args_str = tool_call["function"]["arguments"]
+                    
+                    # Parse arguments (they come as JSON string from LLM)
+                    import json
+                    try:
+                        tool_args = json.loads(tool_args_str) if isinstance(tool_args_str, str) else tool_args_str
+                    except json.JSONDecodeError:
+                        tool_args = {}
+                    
+                    logger.info(f"Executing tool: {tool_name}({tool_args})")
+                    
+                    # Execute tool
+                    try:
+                        if tool_name not in self.tools:
+                            result = f"Error: Tool {tool_name} not found"
+                        else:
+                            tool = self.tools[tool_name]
+                            result = str(tool.call(**tool_args))
+                        
+                        logger.info(f"Tool {tool_name} result: {result[:100]}...")
+                        
+                    except Exception as e:
+                        result = f"Error executing {tool_name}: {str(e)}"
+                        logger.error(result)
+                    
+                    # Add tool result to messages
+                    messages.append(LLMMessage(
+                        role="tool",
+                        content=result,
+                        tool_call_id=tool_call.get("id")
+                    ))
+                
+                # Continue loop to get next LLM response
             
-            response = {
+            # If we hit max iterations, return what we have
+            logger.warning(f"Agent {agent_name} hit max iterations ({max_iterations})")
+            return {
                 "agent": agent_name,
-                "model": llm_response.model,
-                "output": output,
+                "model": agent.model,
+                "output": llm_response.content or "[Max iterations reached]",
                 "params": params,
-                "usage": llm_response.usage,
-                "tool_calls": llm_response.tool_calls
+                "usage": total_usage,
+                "iterations": max_iterations,
+                "warning": "Max iterations reached"
             }
-            
-            logger.info(f"Agent {agent_name} completed with {llm_response.usage.get('total_tokens', 0)} tokens")
-            return response
             
         except Exception as e:
             logger.error(f"Error running agent {agent_name}: {e}")

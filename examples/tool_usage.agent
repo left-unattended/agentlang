@@ -1,0 +1,19 @@
+// Example: Agent using tools to accomplish a task
+
+config {
+    default_model: "gpt-4"
+    log_level: "info"
+}
+
+// Define an agent with web search capability
+agent researcher {
+    model: "gpt-4"
+    prompt: "You are a helpful research assistant. When asked to find information, use the web_search tool to get accurate, up-to-date information. Always cite your sources."
+    tools: [web_search]
+    temperature: 0.3
+}
+
+// Run the agent with a task that requires web search
+run researcher with {
+    task: "What are the latest major developments in AI in 2024? Give me 3 specific examples with details."
+}
