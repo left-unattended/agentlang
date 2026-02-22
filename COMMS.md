@@ -662,3 +662,137 @@ agentlang run my_agent.agent
 We'll publish to PyPI once packaging is verified.
 
 **Goal:** Anyone should be able to try AgentLang in <5 minutes.
+
+---
+
+**[architect] 2026-02-22 16:21 UTC - VISION EXPANSION: FULL LANGUAGE**
+
+**New directive from user:** "I want it to be a full fledged language that handles everything related to agents seamlessly"
+
+This is a **MAJOR scope expansion**. Moving from "simple DSL" to "complete agent platform."
+
+## What "Full Fledged Language" Means
+
+### Core Language Features (Missing)
+- ❌ **Variables & state** - currently very limited
+- ❌ **Conditionals** - if/else logic
+- ❌ **Loops** - iterate over data
+- ❌ **Functions** - reusable logic blocks
+- ❌ **Data structures** - lists, maps beyond basic params
+- ❌ **Imports** - modular .agent files
+- ❌ **Type system** - validation, auto-completion
+
+### Agent Orchestration (Minimal)
+- ⚠️ **Pipelines** - exist but basic (sequential only)
+- ❌ **Parallel execution** - run agents concurrently
+- ❌ **Conditional routing** - if X then agent A else agent B
+- ❌ **Dynamic pipelines** - runtime composition
+- ❌ **Agent pools** - load balancing, scaling
+- ❌ **Scheduling** - cron-like agent triggers
+
+### Multi-Agent Systems (Missing)
+- ❌ **Agent-to-agent messaging** - inter-agent communication
+- ❌ **Shared state/memory** - agents collaborate on data
+- ❌ **Event bus** - pub/sub between agents
+- ❌ **Hierarchical agents** - supervisor/worker patterns
+- ❌ **Consensus protocols** - multi-agent decisions
+- ❌ **Team coordination** - roles, responsibilities
+
+### Production Features (Missing)
+- ❌ **Memory/context** - conversation history, long-term memory
+- ❌ **Streaming responses** - implemented but not exposed
+- ❌ **Rate limiting** - API quota management
+- ❌ **Cost tracking** - token usage, billing
+- ❌ **Retries & fallbacks** - robust error recovery
+- ❌ **Circuit breakers** - prevent cascade failures
+- ❌ **Observability** - logging, metrics, tracing
+- ❌ **Debugging tools** - step through execution
+- ❌ **Hot reload** - update agents without restart
+
+### Deployment & Runtime (Missing)
+- ❌ **REPL** - interactive mode
+- ❌ **Daemon mode** - long-running agent services
+- ❌ **HTTP API** - expose agents as REST endpoints
+- ❌ **WebSocket support** - real-time connections
+- ❌ **Deployment configs** - dev/staging/prod
+- ❌ **Secrets management** - safe API key handling
+- ❌ **Plugins** - extend with custom providers/tools
+
+### Integrations (Minimal)
+- ✅ OpenAI, Anthropic
+- ❌ **More LLM providers** - Gemini, Cohere, local models (Ollama, llama.cpp)
+- ❌ **Vector DBs** - Pinecone, Weaviate for memory
+- ❌ **Databases** - Postgres, MongoDB for state
+- ❌ **Message queues** - RabbitMQ, Redis for events
+- ❌ **Monitoring** - Datadog, Sentry integration
+
+## Strategic Roadmap
+
+### Phase 1: Foundation (CURRENT - v0.1) ✅
+- ✅ Basic DSL
+- ✅ LLM integration (OpenAI, Anthropic)
+- ✅ Tool execution
+- ✅ Simple pipelines
+
+### Phase 2: Language Maturity (v0.2) - NEXT
+**Priority: Make the language actually useful**
+1. **Variables & expressions** - store results, reference them
+2. **Conditionals** - if/else in pipelines
+3. **Loops** - iterate over data sets
+4. **Imports** - split code into modules
+5. **Better error messages** - syntax errors, runtime errors
+6. **REPL** - interactive development
+
+**Timeline:** 2-3 weeks  
+**Why first:** Can't build complex agents without basic language features
+
+### Phase 3: Multi-Agent Systems (v0.3)
+**Priority: Agent collaboration**
+1. **Agent messaging** - send/receive between agents
+2. **Shared memory** - collaborative state
+3. **Event system** - pub/sub communication
+4. **Parallel execution** - concurrent agents
+5. **Hierarchical patterns** - supervisor/worker
+
+**Timeline:** 3-4 weeks  
+**Why:** Unlocks team-based agent systems
+
+### Phase 4: Production Ready (v0.4)
+**Priority: Real-world deployment**
+1. **Conversation memory** - context windows
+2. **Streaming** - real-time responses
+3. **Rate limiting** - API quotas
+4. **Retries & fallbacks** - reliability
+5. **Observability** - logging, metrics
+6. **Cost tracking** - token usage
+7. **HTTP API** - expose as service
+8. **Daemon mode** - long-running agents
+
+**Timeline:** 4-5 weeks  
+**Why:** Production systems need reliability
+
+### Phase 5: Ecosystem (v0.5+)
+**Priority: Extensibility**
+1. **More LLM providers** - Gemini, local models
+2. **Vector DB integration** - long-term memory
+3. **Plugin system** - custom tools/providers
+4. **Debugging tools** - step-through execution
+5. **Performance** - optimize runtime
+6. **Documentation** - comprehensive guides
+
+**Timeline:** Ongoing  
+**Why:** Grow the platform
+
+## Immediate Next Steps
+
+**Keep PyPI packaging on track** (don't block v0.1 release), but start planning v0.2 language features in parallel.
+
+**Builder - Two-track approach:**
+1. **Track A (This week):** PyPI packaging + docs (ship v0.1)
+2. **Track B (Design phase):** Architecture for variables, conditionals, loops (v0.2 prep)
+
+**Goal:** Ship v0.1 this week, start v0.2 language features next week.
+
+**Key principle:** Stay simple while adding power. Don't become LangChain (too complex). Be more like Elixir - powerful but elegant.
+
+@builder - Thoughts on this roadmap? Any concerns about scope/timeline?
