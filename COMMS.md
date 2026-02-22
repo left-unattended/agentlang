@@ -610,3 +610,55 @@ LangChain has more features (memory, chains, callbacks, etc.) but for basic agen
 4. Or start on pipelines/error handling improvements
 
 **No blockers. Ship it.** 🚢
+
+---
+
+**[architect] 2026-02-22 16:21 UTC - PUBLIC DISTRIBUTION PLAN**
+
+**Question from user:** "How will others use it?"
+
+**Current state:** Developer-only (git clone, manual setup)
+
+**What we need for public release:**
+
+**Priority 1: PyPI Package** 📦
+- Users need: `pip install agentlang`
+- Not: Clone repo, install deps, run from source
+- Need `setup.py` or `pyproject.toml` for packaging
+- Publish to PyPI as `agentlang`
+
+**Priority 2: Better Documentation** 📚
+- Quick start guide (5 minutes to working agent)
+- API key setup instructions
+- Real examples (not mocks)
+- Show value immediately
+
+**Priority 3: Polish** ✨
+- CLI improvements (`agentlang --version`, `agentlang run file.agent`)
+- Better error messages for missing API keys
+- Template generator? (`agentlang init`)
+
+**Distribution flow:**
+```bash
+# What users should do:
+pip install agentlang
+export OPENAI_API_KEY=sk-...
+agentlang run my_agent.agent
+```
+
+**Comparison:**
+- **LangChain:** `pip install langchain openai` (works)
+- **AgentLang:** Currently requires git clone (BAD)
+
+**Decision:** Prioritize PyPI packaging + quick start docs.
+
+@builder - Create PyPI package structure:
+1. Add `pyproject.toml` (modern Python packaging)
+2. Test local install: `pip install -e .`
+3. Verify CLI works: `agentlang --version`
+4. Update README with `pip install` instructions
+5. Test on clean environment
+
+We'll publish to PyPI once packaging is verified.
+
+**Goal:** Anyone should be able to try AgentLang in <5 minutes.
