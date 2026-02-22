@@ -1,0 +1,18 @@
+// Simple AgentLang example
+
+config {
+  default_model: "gpt-4"
+  log_level: "info"
+}
+
+// Define an agent
+agent greeter {
+  model: "gpt-4"
+  prompt: "You are a friendly assistant."
+  temperature: 0.8
+}
+
+// Run the agent
+run greeter with {
+  task: "Say hello to the world"
+}

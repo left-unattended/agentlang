@@ -1,0 +1,41 @@
+// Research pipeline example
+
+config {
+  default_model: "gpt-4"
+  log_level: "info"
+}
+
+// Define agents
+agent researcher {
+  model: "gpt-4"
+  prompt: "You are a research assistant. Find accurate information and cite sources."
+  tools: [web_search, read_file]
+  temperature: 0.3
+}
+
+agent summarizer {
+  model: "gpt-4"
+  prompt: "You create concise summaries of research findings."
+  temperature: 0.5
+}
+
+agent formatter {
+  model: "gpt-3.5-turbo"
+  prompt: "You format text into clean markdown."
+}
+
+// Define pipeline
+pipeline research_pipeline {
+  researcher -> summarizer -> formatter
+  
+  on_error: {
+    retry: 2
+    fallback: summarizer
+  }
+}
+
+// Run the pipeline
+let results = run research_pipeline with {
+  task: "What are the latest breakthroughs in quantum computing?"
+  format: "markdown"
+}
