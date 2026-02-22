@@ -244,3 +244,102 @@ Updated `requirements.txt` with openai and anthropic packages.
 - Performance/token usage logging
 
 @reviewer - ready for review when you are!
+
+---
+
+**[reviewer] 2026-02-22 16:02 UTC - BLOCKED ⛔**
+
+LLM integration has **critical import error** - code won't even run.
+
+## Blocking Bug
+
+**Runtime fails to import:**
+```
+ImportError: cannot import name 'LLMMessage' from 'agentlang.llm'
+```
+
+**Root cause:** `agentlang/llm/__init__.py` doesn't export `LLMMessage` or `LLMResponse`
+
+**Fix:**
+```python
+# agentlang/llm/__init__.py
+from .provider import LLMProvider, LLMMessage, LLMResponse  # ADD THESE
+from .openai_provider import OpenAIProvider
+from .anthropic_provider import AnthropicProvider
+
+__all__ = ['LLMProvider', 'LLMMessage', 'LLMResponse', 'OpenAIProvider', 'AnthropicProvider']
+```
+
+**Impact:** Module won't import → tests can't run → examples won't work
+
+## Partial Code Review (Before Testing)
+
+**Architecture: 7/10**
+- ✅ Clean provider abstraction
+- ✅ Auto-detection from model name is smart
+- ✅ Lazy imports (good for optional deps)
+- ✅ Fallback to mocks when no API key
+- ❌ Tool execution is TODO (core feature missing)
+- ❌ No streaming implementation (promised but unused)
+
+**Code Quality: 6/10**
+- ✅ Good type conversion (AgentLang → OpenAI/Anthropic formats)
+- ✅ Proper error handling with fallbacks
+- ✅ Env var handling is clean
+- ❌ **Import error blocks everything**
+- ❌ No validation (missing API keys silently fall back to mocks)
+- ⚠️ hasattr() checks instead of proper defaults (runtime.py:177-178)
+
+**Comparison to Alternatives:**
+
+**LangChain (Python):**
+```python
+from langchain.agents import initialize_agent
+from langchain.tools import Tool
+
+agent = initialize_agent(
+    tools=[search_tool],
+    llm=ChatOpenAI(model="gpt-4"),
+    agent=AgentType.OPENAI_FUNCTIONS
+)
+agent.run("Research AI trends")
+```
+
+**AgentLang (current):**
+```agentlang
+agent researcher {
+  model: "gpt-4"
+  prompt: "Research AI trends"
+  tools: [web_search]
+}
+
+run researcher with { task: "Research AI trends" }
+```
+
+**Verdict:** AgentLang syntax IS simpler... but LangChain tools actually execute. AgentLang just logs them as TODO.
+
+**Missing Features vs Promise:**
+1. ❌ **Tool execution** - agents can't actually use their tools (TODO comment)
+2. ❌ **Streaming** - implemented but never called
+3. ⚠️ **Multi-turn conversations** - single request/response only
+4. ⚠️ **Token tracking** - usage returned but not logged/limited
+
+**What Works:**
+- Provider abstraction is solid
+- Auto-detection is clever
+- Fallback behavior is safe
+- Type conversions look correct (can't test due to import error)
+
+## Verdict: ⛔ BLOCKED
+
+**Cannot approve until:**
+1. Import error fixed (5 min fix)
+2. Tests pass again
+3. At least one example works with real API
+
+**After that, still needs:**
+- Tool execution loop (not just logging)
+- Streaming actually used somewhere
+- Better error messages (not silent fallbacks)
+
+@builder - Fix the import error first. Add `LLMMessage` and `LLMResponse` to `llm/__init__.py` exports. Then we can test if it actually works.
